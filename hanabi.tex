@@ -1,0 +1,242 @@
+\documentclass[a4paper]{article}
+
+\usepackage{forloop}
+\usepackage{xifthen}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{calc}
+\graphicspath{{images/}}
+\tikzset{
+  every picture/.append style={remember picture},
+  img/.style={inner sep=0, outer sep=0}
+}
+
+\newcommand{\deflen}[2]{%
+  \expandafter\newlength\csname #1\endcsname
+  \expandafter\setlength\csname #1\endcsname{#2}%
+}
+
+% number of columns and rows per page
+\newcounter{nCols}
+\setcounter{nCols}{3}
+\newcounter{nRows}
+\setcounter{nRows}{3}
+\newcounter{nCardsOnPage}
+\setcounter{nCardsOnPage}{\thenCols*\thenRows}
+
+% size of cards
+\deflen{cardW}{64mm}
+\deflen{cardH}{92mm}
+
+% maximum width and height for symbols
+\deflen{symW}{16mm}
+\deflen{symH}{16mm}
+
+% maximum width and height for numbers
+\deflen{numW}{6mm}
+\deflen{numH}{8mm}
+
+% space between cards
+\deflen{hGap}{3mm}
+\deflen{vGap}{3mm}
+
+% space between symbols
+\deflen{hSymGap}{3mm}
+\deflen{vSymGap}{5mm}
+
+% design of coloured borders of cards
+\deflen{borderW}{2mm}
+\deflen{cornerR}{4mm}
+
+% colours
+
+
+% --- END OF CONFIGURATION --- %
+
+\deflen{marginV}{(\paperheight -\cardH*\thenRows -\vGap*(\thenRows-1)) / 2}
+\deflen{marginH}{(\paperwidth -\cardW*\thenCols -\hGap*(\thenCols-1)) / 2}
+
+\newcommand{\modulo}[2]{#1 - (#1/#2)*#2}
+
+\newcounter{base}
+\newcounter{row}
+\newcounter{col}
+\newcounter{num}
+\newcounter{pg}
+\newcounter{pgbase}
+
+\newcommand{\colour}{%
+  \ifthenelse{\cnttest{\thebase/10}=0}{red}{%
+    \ifthenelse{\cnttest{\thebase/10}=1}{green}{%
+      \ifthenelse{\cnttest{\thebase/10}=2}{blue}{%
+        \ifthenelse{\cnttest{\thebase/10}=3}{white}{%
+          \ifthenelse{\cnttest{\thebase/10}=4}{yellow}{%
+            rainbow
+          }
+        }
+      }
+    }
+  }
+}
+
+\newcommand{\setup}{%
+  \setcounter{row}{\modulo{\thebase/\thenCols}{\thenRows}}
+  \setcounter{col}{\modulo{\thebase}{\thenCols}}
+  \setcounter{num}{\modulo{\thebase}{10}}
+  
+  % \ifthenelse{\cnttest{\modulo{\thebase}{\thenCols*\thenRows}}=0}{%
+  %   \begin{tikzpicture}[overlay, shift=(current page.south west)]
+  % }{}
+
+  \begin{scope}[shift={(
+    \marginH + \thecol*\cardW + \thecol*\hGap,
+    \marginV + \therow*\cardH + \therow*\vGap
+  )}]
+}
+
+\newcommand{\packdown}{%
+  \end{scope}
+
+  % \ifthenelse{\cnttest{\modulo{\thebase+1}{\thenCols*\thenRows}}=0}{%
+  %   \end{tikzpicture}
+  %   \newpage
+  % }{}
+}
+
+\newcommand{\putnumber}[1]{%
+  % \node[inner sep=0pt, anchor=north east] (num) at (#1) {%
+    \ifthenelse{\thenum < 3}{%
+      \includegraphics[width=\numW, height=\numH]{one2.pdf}
+    }{%
+      \ifthenelse{\thenum < 5}{%
+        \includegraphics[width=\numW, height=\numH]{two.pdf}
+      }{%
+        \ifthenelse{\thenum < 7}{%
+          \includegraphics[width=\numW, height=\numH]{three.pdf}
+        }{%
+          \ifthenelse{\thenum < 9}{%
+            \includegraphics[width=\numW, height=\numH]{four.pdf}
+          }{%
+            \includegraphics[width=\numW, height=\numH]{five.pdf}
+          }
+        }
+      }
+    }
+  % };
+}
+\newcommand{\putsymbol}[2][1]{%
+  \node[img] (sym) at (#2) {%
+    % \includegraphics[width=\symW, height=\symH]{\colour.pdf}
+    \ifthenelse{\cnttest{\thebase/10}=0}{%
+      \includegraphics[width=\symW*#1, height=\symH*#1]{red.pdf}
+    }{%
+      \ifthenelse{\cnttest{\thebase/10}=1}{%
+        \includegraphics[width=\symW*#1, height=\symH*#1]{green.pdf}
+      }{%
+        \ifthenelse{\cnttest{\thebase/10}=2}{%
+          \includegraphics[width=\symW*#1, height=\symH*#1]{blue.pdf}
+        }{%
+          \ifthenelse{\cnttest{\thebase/10}=3}{%
+            \includegraphics[width=\symW*#1, height=\symH*#1]{white.pdf}
+          }{%
+            \ifthenelse{\cnttest{\thebase/10}=4}{%
+              \includegraphics[width=\symW*#1, height=\symH*#1]{yellow.pdf}
+            }{%
+              \includegraphics[width=\symW*#1, height=\symH*#1]{rainbow.pdf}
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
+\newcommand{\drawCard}{%
+  \draw[color=black, line width=\borderW, rounded corners=\cornerR-\borderW]
+  (\borderW/2, \borderW/2) rectangle (\cardW-\borderW/2, \cardH-\borderW/2);
+  \draw[color=black, rounded corners=\cornerR] (0,0) rectangle (\cardW, \cardH);
+  % \node (card) at (\cardW/2,\cardH/2) [draw, rounded corners=\cornerR, color=black,
+  %   minimum width=\cardW, minimum height=\cardH] {};
+  % numbers at corners
+  \node[img, anchor=south west] (numsw) at (2*\borderW, 2*\borderW) {%
+    \putnumber{}
+  };
+  \node[img, anchor=south east] (numse) at (\cardW, 2*\borderW) {%
+    \putnumber{}
+  };
+  \node[img, anchor=north east] (numne) at (\cardW, \cardH-2*\borderW) {%
+    \putnumber{}
+  };
+  \node[img, anchor=north west] (numnw) at (2*\borderW, \cardH-2*\borderW) {%
+    \putnumber{}
+  };
+  % \putnumber{\borderW+\numW, \borderW+\numH}
+  % \putnumber{\cardW-\borderW, \borderW+\numH}
+  % \putnumber{\cardW-\borderW, \cardH-\borderW}
+  % \putnumber{\borderW+\numW, \cardH-\borderW}
+  % symbols in middle
+  \begin{scope}[shift={(\cardW/2, \cardH/2)}]
+    \ifthenelse{\thenum < 3}{%
+      \putsymbol[2]{0,0}
+    }{%
+      \ifthenelse{\thenum < 5}{%
+        \putsymbol[\real{1.5}]{0, \vSymGap/2+1.5*\symH/2}
+        \putsymbol[\real{1.5}]{0, -\vSymGap/2-1.5*\symH/2}
+      }{%
+        \ifthenelse{\thenum < 7}{%
+          \putsymbol{0, \vSymGap+\symH}
+          \putsymbol{0, 0}
+          \putsymbol{0, -\vSymGap-\symH}
+        }{%
+          \ifthenelse{\thenum < 9}{%
+            \putsymbol{\hSymGap/2+\symW/2, 0}
+            \putsymbol{-\hSymGap/2-\symW/2, 0}
+            \putsymbol{0, \vSymGap+\symH}
+            \putsymbol{0, -\vSymGap-\symH}
+          }{%
+            \putsymbol{-\hSymGap-\symW, 0}
+            \putsymbol{0, 0}
+            \putsymbol{\hSymGap+\symW, 0}
+            \putsymbol{0, -\vSymGap-\symH}
+            \putsymbol{0, \vSymGap+\symH}
+          }
+        }
+      }
+    }
+  \end{scope}
+}
+
+\pagenumbering{gobble}
+
+
+\begin{document}
+
+% \forloop{base}{0}{\thebase < 60}{%
+%   \setup
+%   \drawCard
+%   \packdown
+% }
+
+\forloop{pg}{0}{\thepg < 6}{%
+  \begin{tikzpicture}[overlay, shift=(current page.south west)]
+    \forloop{pgbase}{0}{\thepgbase < \thenCardsOnPage}{%
+      \setcounter{base}{\thepg * \thenCols * \thenRows + \thepgbase}
+      \setup
+      \drawCard
+      \packdown
+    }
+  \end{tikzpicture}
+  \newpage
+}
+
+% last page
+\begin{tikzpicture}[overlay, shift=(current page.south west)]
+  \forloop{pgbase}{0}{\thepgbase < 6}{%
+    \setcounter{base}{\thepg * \thenCols * \thenRows + \thepgbase}
+    \setup
+    \drawCard
+    \packdown
+  }
+\end{tikzpicture}
+
+\end{document}
